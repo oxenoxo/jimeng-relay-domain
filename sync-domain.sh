@@ -2,6 +2,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO="oxenoxo/jimeng-relay-domain"
 URL="${1:-}"
 
 if [ -z "$URL" ] && [ -f "$HOME/jimeng-url.txt" ]; then
@@ -22,6 +23,11 @@ if [[ ! "$URL" =~ ^https://[a-z0-9-]+\.tunnelmole\.net/?$ ]]; then
   exit 1
 fi
 
+if ! command -v gh >/dev/null 2>&1; then
+  echo "需要 GitHub CLI：请先安装 gh 并登录 gh auth login" >&2
+  exit 1
+fi
+
 URL="${URL%/}"
 export LATEST_URL="$URL"
 cd "$REPO_DIR"
@@ -38,11 +44,13 @@ const out = {
 fs.writeFileSync(path.join(process.cwd(), 'latest.json'), JSON.stringify(out, null, 2) + '\n');
 NODE
 
-git -C "$REPO_DIR" add latest.json
-if git -C "$REPO_DIR" diff --cached --quiet; then
-  echo "GitHub 上已经是最新地址：$URL"
-else
-  git -C "$REPO_DIR" commit -m "chore: update latest tunnel URL"
-  git -C "$REPO_DIR" push origin main
-  echo "已同步到 GitHub Pages：$URL"
-fi
+CONTENT=$(base64 < latest.json | tr -d '\n')
+SHA=$(gh api "repos/$REPO/contents/latest.json" --jq '.sha')
+gh api "repos/$REPO/contents/latest.json" \
+  -X PUT \
+  -f message='chore: update latest tunnel URL' \
+  -f content="$CONTENT" \
+  -f branch=main \
+  -f sha="$SHA" >/dev/null
+
+echo "已同步到 GitHub Pages：$URL"
