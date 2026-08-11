@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>即梦中转站 · 最新入口</title>
+<style>
+:root{--bg:#0b0c10;--panel:#15171d;--panel2:#1c1f27;--line:rgba(255,255,255,.1);--text:#f3f4f7;--muted:#9da2ae;--cyan:#54d5d9;--green:#50d58a;--red:#fa7474;--shadow:0 20px 70px rgba(0,0,0,.4)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(900px 600px at 85% 0%,rgba(84,213,217,.13),transparent 55%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;display:grid;place-items:center;padding:24px}button{font:inherit;color:inherit;cursor:pointer}button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}.shell{width:min(650px,100%)}.brand{display:flex;align-items:center;gap:10px;margin:0 0 18px 4px;color:var(--muted);font-size:13px}.brand-mark{width:31px;height:31px;border-radius:10px;background:linear-gradient(135deg,#54d5d9,#8c74ff);display:grid;place-items:center;color:#071012;font-weight:800}.card{background:linear-gradient(145deg,rgba(30,32,40,.96),rgba(18,19,24,.98));border:1px solid var(--line);border-radius:22px;padding:30px;box-shadow:var(--shadow)}.eyebrow{display:flex;align-items:center;gap:8px;color:var(--cyan);font-size:12px;font-weight:600;letter-spacing:.08em}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px rgba(80,213,138,.5)}.dot.off{background:var(--red);box-shadow:none}h1{margin:12px 0 8px;font-size:30px;letter-spacing:-.04em}p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}.url-box{margin:25px 0 17px;padding:18px;border:1px solid rgba(84,213,217,.25);border-radius:14px;background:rgba(84,213,217,.06);word-break:break-all;font-size:18px;line-height:1.5;color:#d9ffff;min-height:56px}.url-box.empty{color:var(--muted);font-size:14px}.actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:10px 14px;font-size:13px}.btn:hover{border-color:rgba(255,255,255,.25);background:#252832}.btn.primary{border-color:rgba(84,213,217,.45);background:var(--cyan);color:#061012;font-weight:650}.btn.primary:hover{filter:brightness(1.05)}.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:20px;padding-top:15px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}.status{margin-top:18px;display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}.notice{margin-top:18px;border:1px dashed var(--line);border-radius:11px;padding:11px 13px;color:var(--muted);font-size:11px;line-height:1.65}.footer{text-align:center;color:#6f7480;font-size:11px;margin-top:16px}.spin{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:520px){body{padding:14px}.card{padding:22px 18px;border-radius:18px}h1{font-size:25px}.url-box{font-size:15px;padding:14px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="brand"><span class="brand-mark">✦</span><span>即梦中转站 · GitHub 最新入口</span></div>
+  <section class="card">
+    <div class="eyebrow"><span class="dot" id="statusDot"></span><span id="eyebrow">LATEST PUBLIC ENTRY</span></div>
+    <h1>最新访问地址</h1>
+    <p>隧道重启后地址会变化。这个页面会自动读取你电脑同步到 GitHub 的最新入口。</p>
+    <div class="url-box empty" id="urlBox">正在读取最新地址…</div>
+    <div class="actions">
+      <button class="btn primary" id="openBtn" disabled>打开网站</button>
+      <button class="btn" id="copyBtn" disabled>复制地址</button>
+      <button class="btn" id="refreshBtn">立即刷新</button>
+    </div>
+    <div class="status"><span class="dot" id="pingDot"></span><span id="statusText">正在检查状态…</span></div>
+    <div class="meta"><span>更新时间：<b id="updatedAt">—</b></span><span>来源：<b id="source">—</b></span><span>自动刷新：<b>10 秒</b></span></div>
+    <div class="notice">如果显示“暂未同步”，请先在你的电脑上启动后端和隧道，再运行 <code>bash sync-domain.sh</code>。</div>
+  </section>
+  <div class="footer">只公开隧道地址，不包含即梦 sessionid。</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);let latest=null, timer=null;
+function setStatus(ok,text){$('pingDot').classList.toggle('off',!ok);$('statusText').textContent=text}
+async function load(){
+  $('refreshBtn').classList.add('spin');
+  try{
+    const r=await fetch(`latest.json?t=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw new Error('not found');
+    latest=await r.json();const url=latest.url||'';const box=$('urlBox');box.textContent=url||'暂未同步最新地址';box.classList.toggle('empty',!url);
+    $('openBtn').disabled=!url;$('copyBtn').disabled=!url;$('updatedAt').textContent=latest.updatedAt||'—';$('source').textContent=latest.source||'tunnelmole';
+    if(url){setStatus(false,'正在检查隧道状态…');ping(url)}else setStatus(false,'等待本地同步');
+  }catch(e){latest=null;$('urlBox').textContent='暂未同步最新地址';$('urlBox').classList.add('empty');$('openBtn').disabled=true;$('copyBtn').disabled=true;setStatus(false,'暂无可用地址')}
+  finally{$('refreshBtn').classList.remove('spin')}
+}
+async function ping(url){try{const r=await fetch(`${url.replace(/\/+$/,'')}/api/health`,{mode:'cors',cache:'no-store'});setStatus(r.ok,r.ok?'隧道在线，可直接访问':'隧道异常')}catch(e){setStatus(false,'地址已记录，隧道当前未响应')}}
+$('openBtn').onclick=()=>latest?.url&&window.open(latest.url,'_blank');
+$('copyBtn').onclick=async()=>{if(!latest?.url)return;try{await navigator.clipboard.writeText(latest.url);$('copyBtn').textContent='已复制';setTimeout(()=>$('copyBtn').textContent='复制地址',1600)}catch(e){window.prompt('复制这个地址：',latest.url)}};
+$('refreshBtn').onclick=load;load();timer=setInterval(load,10000);window.addEventListener('beforeunload',()=>clearInterval(timer));
+</script>
+</body>
+</html>
